@@ -28,11 +28,12 @@
 #include "swmeta.hpp"
 
 /*
-Three modes of operations:
+Four modes of operations:
 
 1. Finding words with minimal maxocc of subwords using hinted exhaustive search
 2. Metaheuristic search to obtain reasonable hint
 3. Histogram of maxocc of subwords
+4. Compute (an underestimation of) the best maxocc of "increments" of a given word by inserting a bit
 */
 
 int main(int argc, char** argv){
@@ -64,6 +65,22 @@ int main(int argc, char** argv){
             printf("Metaheuristic search for hint with with %d bits.\n", n);
             mixed_descent(n, atoi(argv[3]), atoi(argv[4]));
             computed = true;
+        }else if(strcmp(argv[2], "word") == 0){
+            if(argc < 4 || strlen(argv[3]) != n){
+                printf("Invalid argument for the word.\n");
+            }else{
+                printf("Maxocc for single word.\n");
+                compute_maxfreq_subword(argv[3]);
+            }
+            computed = true;
+        }else if(strcmp(argv[2], "insert") == 0){
+            if(argc < 4 || strlen(argv[3]) != n - 1){
+                printf("Invalid argument for the word.\n");
+            }else{
+                printf("Heuristic by inserting a bit.\n");
+                insert_heuristic(argv[3]);
+            }
+            computed = true; 
         }else{
            hint = atoi(argv[2]);
         }

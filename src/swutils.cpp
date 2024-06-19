@@ -35,7 +35,6 @@ Word build_word_str(const char* str, bool is_subword){
 
 // print record
 void print_record(Rec_sw* minrec){
-    printf("%d bits, maxfreq %lu\n", minrec->word.len, minrec->occ);
     print_word_bin(minrec->word);
     for(auto sw : minrec->subwords){
         printf("Subword: ");
@@ -50,11 +49,7 @@ void hinted_search(int n, u64 hint){
     Rec_occ minrec = min_maxfreq_subword_hinted(n, hint);
     printf("%d bits, hint %lu, found %lu\n", n, hint, minrec.occ);
     for(auto rec : minrec.recs){
-        print_word_bin(rec.word);
-        for(auto sw : rec.subwords){
-            printf("Subword: ");
-            print_word_bin(sw);
-        }
+        print_record(&rec);
     }
     return;
 }
@@ -64,11 +59,7 @@ void pruned_search(int n, u64 hint){
     Rec_occ minrec = min_maxfreq_subword_pruned(n, hint);
     printf("%d bits, hint %lu, found %lu\n", n, hint, minrec.occ);
     for(auto rec : minrec.recs){
-        print_word_bin(rec.word);
-        for(auto sw : rec.subwords){
-            printf("Subword: ");
-            print_word_bin(sw);
-        }
+        print_record(&rec);
     }
     return;
 }
@@ -81,5 +72,45 @@ void histo_subword(int n){
         printf("%lu: %lu\n", freq, cnt);
     }
     printf("}\n");
+    return;
+}
+
+// compute the most frequent subwords of a given word
+void compute_maxfreq_subword(char* wstr){
+    int n = strlen(wstr);
+    Rec_sw minrec = maxfreq_subword_hinted(build_word_str(wstr, false), 1ul << n);
+    printf("Word %s, maxocc %lu\n", wstr, minrec.occ);
+    print_record(&minrec);
+    return;
+}
+
+// adds a letter somewhere in a hinted word (previous record), using incomplete
+// computation
+void insert_heuristic(char* wstr){
+    int n = strlen(wstr);
+    Word oldw = build_word_str(wstr, false);
+    u64 wbits = oldw.bits;
+    u64 recw = wbits;
+    u64 recocc = maxfreq_subword_fast(oldw) << 1;
+    // insert a new bit at each possible way
+    for(int i = 0; i < n; i++){
+        for(int bit = 0; bit < 2; bit++){
+            // insert a new bit at position i
+            u64 newbits = wbits >> i;
+            newbits <<= 1;
+            newbits += bit;
+            newbits <<= i;
+            newbits += wbits & ((1ul << i) - 1);
+            Word w = build_word(newbits, n + 1, false);
+            u64 swocc = maxfreq_subword_fast(w);
+            if(swocc < recocc){
+                recocc = swocc;
+                recw = newbits;
+            }
+        }
+    }
+    oldw = build_word(recw, n + 1, false);
+    print_word_bin(oldw);
+    printf("Maxocc (fast): %lu\n", recocc);
     return;
 }

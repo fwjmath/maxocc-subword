@@ -43,4 +43,11 @@ void histo_subword(int n);
 // print record
 void print_record(Rec_sw* minrec);
 
+// compute the most frequent subwords of a given word
+void compute_maxfreq_subword(char* wstr);
+
+// adds a letter somewhere in a hinted word (previous record)
+// computation is heuristic, not complete (fast variant)
+void insert_heuristic(char* wstr);
+
 #endif
