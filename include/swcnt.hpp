@@ -69,6 +69,9 @@ typedef struct {
 // precompute binomial coefficients
 void binom_precompute();
 
+// return the precomputed binomial coefficients
+u64 binomial(int i, int j);
+
 // build the struct of Word
 // there are different memory space for the tab for word and subword
 // thus the parameter

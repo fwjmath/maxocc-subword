@@ -106,10 +106,15 @@ Histogram maxfreq_subword_histo(int n){
 // as we will be taking maximum for a given word, when one subwordsuch is found,
 // no need to test further as it will not improve the record
 static void maxfreq_subword_len_hinted(Rec_sw* maxrec, int k, u64 record){
+    // first check: are there enough subwords occurrences?
+    // TODO: can we improve this?
+    if(binomial(maxrec->word.len, k) < record) return;
+    // initialization
     maxrec->occ = 0;
     maxrec->subwords.clear();
     Word w = maxrec->word;
     Word sw = build_word(w.bits & 1, k, true);
+    // the loop
     do {
         u64 occ = subword_cnt(w, sw);
         if(occ >= maxrec->occ){
@@ -148,6 +153,48 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
             return maxrec;
         }
     }
+    // another filter: flip a bit
+    for(int i = 1; i < lastsw_len - 1; i++){
+        u64 modsw = lastsw_bits ^ (1ull << i);
+        Word newsw = build_word(modsw, lastsw_len, true);
+        u64 filter_occ = subword_cnt(w, newsw);
+        if(filter_occ > record){
+            maxrec.subwords.push_back(newsw);
+            maxrec.occ = filter_occ;
+            return maxrec;
+        }
+    }
+    // yet another filter: flip two bits
+    for(int i = 1; i < lastsw_len - 2; i++){
+        for(int j = i + 1; j < lastsw_len - 1; j++){
+            u64 modsw = lastsw_bits ^ (1ull << i) ^ (1ull << j);
+            Word newsw = build_word(modsw, lastsw_len, true);
+            u64 filter_occ = subword_cnt(w, newsw);
+            if(filter_occ > record){
+                maxrec.subwords.push_back(newsw);
+                maxrec.occ = filter_occ;
+                return maxrec;
+            }
+        }
+    }
+    // again another filter: words with run length only 1 and 2
+    // needs more test to see if it leads to speedup for larger n
+#ifdef USE_FIBO
+    if(lastsw_len >= 3 && fibogen_init(lastsw_len)){
+        u64 bits = 0;
+        while(true){
+            bool contd = fibogen_next(&bits);
+            Word newsw = build_word(bits, lastsw_len, true);
+            u64 filter_occ = subword_cnt(w, newsw);
+            if(filter_occ > record){
+                maxrec.subwords.push_back(newsw);
+                maxrec.occ = filter_occ;
+                return maxrec;
+            }
+            if(!contd) break;
+        }
+    }
+#endif
     // check different lengths with most probable order
     int curk = lastsw_len;
     int curdev = 0;

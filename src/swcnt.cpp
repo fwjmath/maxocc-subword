@@ -44,7 +44,7 @@ void binom_precompute(){
 }
 
 // extraction of precomputed results
-static inline u64 binomial(int i, int j){
+u64 binomial(int i, int j){
     return binom[i][j];
 }
 
