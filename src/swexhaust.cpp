@@ -189,6 +189,8 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
             if(filter_occ > record){
                 maxrec.subwords.push_back(newsw);
                 maxrec.occ = filter_occ;
+                // we update here because it may change a lot
+                lastsw = maxrec.subwords[0];
                 return maxrec;
             }
             if(!contd) break;
