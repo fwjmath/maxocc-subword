@@ -31,7 +31,7 @@
 #include <utility>
 
 #define MAXLEN 64
-#define MAX_CACHE_RUN 8
+#define MAX_CACHE_RUN 9
 
 typedef uint64_t u64;
 
@@ -104,5 +104,8 @@ void remove_bit(Word* word);
 
 // returns the number of subword occurrences
 u64 subword_cnt(Word word, Word subword);
+
+// set to be used in a parallel way, i.e., forbidding insertions in cache
+void set_parallel_mode();
 
 #endif

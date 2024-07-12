@@ -81,6 +81,16 @@ int main(int argc, char** argv){
                 insert_heuristic(argv[3]);
             }
             computed = true; 
+        }else if(strcmp(argv[2], "mt") == 0){
+            hint = (argc < 4) ? (1ULL << n) : atoi(argv[3]);
+            // first, fill the cache in with histo
+            maxfreq_subword_histo(n >> 1); // throw away the result!
+            printf("Finished precomputing\n");
+            mytime = time(NULL);
+            printf("%s", ctime(&mytime));
+            // now, call the parallel function
+            hinted_search_parallel(n, hint);
+            computed = true;
         }else{
            hint = atoi(argv[2]);
         }

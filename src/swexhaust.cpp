@@ -183,7 +183,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
     }
     // again another filter: words with run length only 1 and 2
     // needs more test to see if it leads to speedup for larger n
-#ifdef USE_FIBO
+    // speeds up for n=37, about 15%, so promoted to regular usage
     if(lastsw_len >= 3 && fibogen_init(lastsw_len)){
         u64 bits = 0;
         while(true){
@@ -200,7 +200,6 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
             if(!contd) break;
         }
     }
-#endif
     // check different lengths with most probable order
     int curk = lastsw_len;
     int curdev = 0;
@@ -276,11 +275,41 @@ Rec_occ min_maxfreq_subword_hinted(int n, u64 record){
     minrec.occ = record;
     minrec.recs = std::vector<Rec_sw>();
     do {
+        print_word_bin(w);
         if(!is_primitive(w.bits, n)) continue; // only test primitive ones
         update_minrec(&minrec, maxfreq_subword_hinted(w, record));
         record = minrec.occ;
     } while(increment_word(&w));
     return minrec;
+}
+
+// exhaustive search with a hint, parallel version
+void* min_maxfreq_subword_hinted_parallel(void* info){
+    // get information
+    Thread_info tinfo = *((Thread_info*) info);
+    int n = tinfo.n;
+    u64 record = tinfo.record;
+    // construct the word
+    Runtab wruns;
+    Word w = build_word(0, n, wruns);
+    for(int i = 0; i < tinfo.thread_id; i++) increment_word(&w); // the correct starting point
+    // initialize the records
+    tinfo.minrec->occ = record;
+    tinfo.minrec->recs = std::vector<Rec_sw>();
+    bool has_next = true; // there are still words to check
+    do {
+        if(is_primitive(w.bits, n)){ // only test primitive ones
+            update_minrec(tinfo.minrec, maxfreq_subword_hinted(w, record));
+            record = tinfo.minrec->occ;
+        }
+        for(int i = 0; i < THREAD_COUNT; i++){
+            if(!increment_word(&w)){
+                has_next = false;
+                break;
+            }
+        }
+    } while(has_next);
+    return NULL;
 }
 
 // extend the candidate word in pruned exhaustive search

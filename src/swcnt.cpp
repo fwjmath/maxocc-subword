@@ -23,6 +23,7 @@
 
 u64 binom[MAXLEN][MAXLEN];
 Cache swcnt[MAXLEN][MAXLEN]; // indices are #bits
+u64 parallel_mask = -1; // -1 by default means serial mode. 0 to set means parallel mode
 
 // precompute the table
 void binom_precompute(){
@@ -254,7 +255,7 @@ static inline Word cut_word_back(Word w, int run){
 }
 
 // assuming w and sw starts with the same letter, and end also the same
-static u64 subword_cnt_raw(Word w, Word sw){
+static u64 subword_cnt_raw(Word w, Word sw, int orig_wlen){
     if(sw.runcnt == 0) return 1; // empty subword
     if(w.runcnt < sw.runcnt) return 0; // not enough run
     u64 accu = 0;
@@ -286,8 +287,8 @@ static u64 subword_cnt_raw(Word w, Word sw){
     Word swback = cut_word_back(sw, mididx + 1);
     if(lidx == ridx){
         accu = binom[w.run[lidx]][midseg]; // middle span
-        accu *= subword_cnt_raw(cut_word_front(w, lidx), swfront);
-        accu *= subword_cnt_raw(cut_word_back(w, lidx + 1), swback); 
+        accu *= subword_cnt_raw(cut_word_front(w, lidx), swfront, orig_wlen);
+        accu *= subword_cnt_raw(cut_word_back(w, lidx + 1), swback, orig_wlen); 
     } else {
         for(int k = lidx; k < ridx + 2; k += 2){
             int wsegtotal = 0;
@@ -306,14 +307,15 @@ static u64 subword_cnt_raw(Word w, Word sw){
                 mult -= binom[wsegin + w.run[l]][midseg];
                 if(wsegin >= 0) mult += binom[wsegin][midseg];
                 if(mult > 0){
-                    mult *= subword_cnt_raw(cut_word_front(w, k), swfront);
-                    mult *= subword_cnt_raw(cut_word_back(w, l + 1), swback);
+                    mult *= subword_cnt_raw(cut_word_front(w, k), swfront, orig_wlen);
+                    mult *= subword_cnt_raw(cut_word_back(w, l + 1), swback, orig_wlen);
                     accu += mult;
                 }
             }
         }
     }
-    if(w.runcnt < MAX_CACHE_RUN){
+    // restriction on length to limit memory usage and control for modification for parallelism
+    if(w.runcnt < MAX_CACHE_RUN && w.len <= (orig_wlen >> 1)){
         swcnt[w.len][sw.len].insert({u64pair(w.bits, sw.bits), accu});
     }
     // debug info
@@ -341,5 +343,11 @@ u64 subword_cnt(Word word, Word subword){
         word.bits >>= word.run[word.runcnt - 1];
         word.runcnt--;
     }
-    return subword_cnt_raw(word, subword);
+    return subword_cnt_raw(word, subword, word.len & parallel_mask);
+}
+
+// set to be used in a parallel way, i.e., forbidding insertions in cache
+void set_parallel_mode(){
+    parallel_mask = 0;
+    return;
 }
