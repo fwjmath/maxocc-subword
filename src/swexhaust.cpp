@@ -109,8 +109,9 @@ Histogram maxfreq_subword_histo(int n){
 // no need to test further as it will not improve the record
 static void maxfreq_subword_len_hinted(Rec_sw* maxrec, int k, u64 record){
     // first check: are there enough subwords occurrences?
+    // need to check if the record is a real one or just the max
     // TODO: can we improve this?
-    if(binomial(maxrec->word.len, k) < record) return;
+    if(record != (1ULL << maxrec->word.len) && binomial(maxrec->word.len, k) < record) return;
     // initialization
     maxrec->occ = 0;
     maxrec->subwords.clear();
@@ -183,7 +184,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
     }
     // again another filter: words with run length only 1 and 2
     // needs more test to see if it leads to speedup for larger n
-#ifdef USE_FIBO
+    // good for n=37, promoted
     if(lastsw_len >= 3 && fibogen_init(lastsw_len)){
         u64 bits = 0;
         while(true){
@@ -200,7 +201,6 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
             if(!contd) break;
         }
     }
-#endif
     // check different lengths with most probable order
     int curk = lastsw_len;
     int curdev = 0;
