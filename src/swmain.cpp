@@ -84,7 +84,9 @@ int main(int argc, char** argv){
         }else if(strcmp(argv[2], "mt") == 0){
             hint = (argc < 4) ? (1ULL << n) : atoi(argv[3]);
             // first, fill the cache in with histo
-            maxfreq_subword_histo(2 + (n >> 1)); // throw away the result!
+            int cachebit = 2 + (n >> 1);
+            if(cachebit > 20) cachebit = 20; // takes 10GB memory
+            maxfreq_subword_histo(cachebit); // throw away the result!
             printf("Finished precomputing\n");
             mytime = time(NULL);
             printf("%s", ctime(&mytime));
