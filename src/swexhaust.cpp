@@ -24,7 +24,8 @@
 // compute max frequence subword with given length, for histogram, no speed up
 static inline u64 maxfreq_subword_len(Word w, int k){
     u64 maxocc = 0;
-    Word sw = build_word(w.bits & 1, k, true);
+    Runtab wruns;
+    Word sw = build_word(w.bits & 1, k, wruns);
     do {
         u64 occ = subword_cnt(w, sw);
         if(occ >= maxocc){
@@ -86,7 +87,8 @@ static inline int sym_mult(u64 bits, int len){
 // returns histogram of max subword occurrences
 Histogram maxfreq_subword_histo(int n){
     // construct the word
-    Word w = build_word(0, n, false);
+    Runtab wordruns;
+    Word w = build_word(0, n, wordruns);
     // initialize the histogram
     Histogram histo = Histogram(); 
     do {
@@ -112,8 +114,9 @@ static void maxfreq_subword_len_hinted(Rec_sw* maxrec, int k, u64 record){
     // initialization
     maxrec->occ = 0;
     maxrec->subwords.clear();
+    Runtab swruns;
     Word w = maxrec->word;
-    Word sw = build_word(w.bits & 1, k, true);
+    Word sw = build_word(w.bits & 1, k, swruns);
     // the loop
     do {
         u64 occ = subword_cnt(w, sw);
@@ -133,6 +136,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
     Rec_sw maxrec_len = {w, std::vector<Word>(), 1};
     int lastsw_len = lastsw.len;
     u64 lastsw_bits = lastsw.bits;
+    Runtab swruntab;
     // filter with heuristics
     // if one of the following constructed subword give something bigger than
     // the record, then we can stop
@@ -145,7 +149,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
     newbits[2] = lastsw_bits;
     for(int i = 0; i < 3; i++){
         int newlen = (i == 1 ? lastsw_len + 1 : lastsw_len); 
-        Word newsw = build_word(newbits[i], newlen, true);
+        Word newsw = build_word(newbits[i], newlen, swruntab);
         u64 filter_occ = subword_cnt(w, newsw);
         if(filter_occ > record){
             maxrec.subwords.push_back(newsw);
@@ -156,7 +160,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
     // another filter: flip a bit
     for(int i = 1; i < lastsw_len - 1; i++){
         u64 modsw = lastsw_bits ^ (1ull << i);
-        Word newsw = build_word(modsw, lastsw_len, true);
+        Word newsw = build_word(modsw, lastsw_len, swruntab);
         u64 filter_occ = subword_cnt(w, newsw);
         if(filter_occ > record){
             maxrec.subwords.push_back(newsw);
@@ -168,7 +172,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
     for(int i = 1; i < lastsw_len - 2; i++){
         for(int j = i + 1; j < lastsw_len - 1; j++){
             u64 modsw = lastsw_bits ^ (1ull << i) ^ (1ull << j);
-            Word newsw = build_word(modsw, lastsw_len, true);
+            Word newsw = build_word(modsw, lastsw_len, swruntab);
             u64 filter_occ = subword_cnt(w, newsw);
             if(filter_occ > record){
                 maxrec.subwords.push_back(newsw);
@@ -184,7 +188,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
         u64 bits = 0;
         while(true){
             bool contd = fibogen_next(&bits);
-            Word newsw = build_word(bits, lastsw_len, true);
+            Word newsw = build_word(bits, lastsw_len, swruntab);
             u64 filter_occ = subword_cnt(w, newsw);
             if(filter_occ > record){
                 maxrec.subwords.push_back(newsw);
@@ -265,7 +269,8 @@ static inline void update_minrec(Rec_occ* minrec, Rec_sw maxrec){
 // exhaustive search with a hint
 Rec_occ min_maxfreq_subword_hinted(int n, u64 record){
     // construct the word
-    Word w = build_word(0, n, false);
+    Runtab wruns;
+    Word w = build_word(0, n, wruns);
     // initialize the records
     Rec_occ minrec;
     minrec.occ = record;
@@ -303,7 +308,7 @@ Rec_occ min_maxfreq_subword_pruned(int n, u64 record){
     int localruns[MAXLEN];
     int len = n >> 1;
     Rec_occ minrec = {std::vector<Rec_sw>(), record};
-    Word pw = build_word_ext(0, len + 1, localruns);
+    Word pw = build_word(0, len + 1, localruns);
     do {
         min_maxfreq_prune(n, &pw, &minrec);
     } while(increment_word(&pw));

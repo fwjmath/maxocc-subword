@@ -23,8 +23,6 @@
 
 u64 binom[MAXLEN][MAXLEN];
 Cache swcnt[MAXLEN][MAXLEN]; // indices are #bits
-int wordrun[MAXLEN];
-int swrun[MAXLEN];
 
 // precompute the table
 void binom_precompute(){
@@ -48,12 +46,8 @@ u64 binomial(int i, int j){
     return binom[i][j];
 }
 
-Word build_word(u64 wordbin, int len, bool is_subword){
-    return build_word_ext(wordbin, len, (is_subword ? swrun : wordrun));
-}
-
 // build struct word with external array
-Word build_word_ext(u64 wordbin, int len, int* tab){
+Word build_word(u64 wordbin, int len, Runtab tab){
     Word w;
     w.bits = wordbin;
     w.len = len;
@@ -83,7 +77,7 @@ Word build_word_ext(u64 wordbin, int len, int* tab){
     return w;
 }
 
-// print the word
+// print the word, does not use the field "run"
 void print_word_bin(Word word){
     // convert binary representation
     char str[65];

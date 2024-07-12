@@ -27,8 +27,8 @@
 #include "swcnt.hpp"
 #include "swexhaust.hpp"
 
-// build a word according to a 0-1 string
-Word build_word_str(const char* str, bool is_subword);
+// build a word according to a 0-1 string, the run array should be offered
+Word build_word_str(const char* str, bool is_subword, Runtab wruns);
 
 // exhaustive search for minimal subword entropy, using a hint
 // using subword with large number of occurrences from the last word as a hint

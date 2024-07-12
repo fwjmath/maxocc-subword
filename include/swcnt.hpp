@@ -37,6 +37,8 @@ typedef uint64_t u64;
 
 typedef std::pair<u64, u64> u64pair;
 
+typedef int Runtab[MAXLEN];
+
 struct pairhash {
     public:
     template <typename T, typename U>
@@ -50,6 +52,8 @@ typedef std::unordered_map<u64pair, u64, pairhash> Cache; // Cache for subword c
 typedef struct{
     u64 bits;
     int* run;  // run lengths from left to right, leftmost run always contains 0
+               // should not use this field outside the called function
+               // as most of the time it will be local variables
     int runcnt;
     int len;   // number of bits
 } Word;
@@ -72,18 +76,13 @@ void binom_precompute();
 // return the precomputed binomial coefficients
 u64 binomial(int i, int j);
 
-// build the struct of Word
-// there are different memory space for the tab for word and subword
-// thus the parameter
-Word build_word(u64 wordbin, int len, bool is_subword);
-
 // build the struct Word with an external array
-Word build_word_ext(u64 wordbin, int len, int* tab);
+Word build_word(u64 wordbin, int len, int* tab);
 
 // debug purpose
 void print_word(Word* word);
 
-// printing the word
+// printing the word, does not use the field "run"
 void print_word_bin(Word word);
 
 // debug purpose

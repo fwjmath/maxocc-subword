@@ -22,7 +22,7 @@
 #include "swutils.hpp"
 
 // build a word according to a 0-1 string
-Word build_word_str(const char* str, bool is_subword){
+Word build_word_str(const char* str, Runtab wruns){
     int n = strlen(str);
     u64 bits = 0;
     // assuming 0-1 string
@@ -30,7 +30,7 @@ Word build_word_str(const char* str, bool is_subword){
         bits <<= 1;
         bits += str[i] - '0';
     }
-    return build_word(bits, n, is_subword);
+    return build_word(bits, n, wruns);
 }
 
 // print record
@@ -78,7 +78,8 @@ void histo_subword(int n){
 // compute the most frequent subwords of a given word
 void compute_maxfreq_subword(char* wstr){
     int n = strlen(wstr);
-    Rec_sw minrec = maxfreq_subword_hinted(build_word_str(wstr, false), 1ul << n);
+    Runtab wruns;
+    Rec_sw minrec = maxfreq_subword_hinted(build_word_str(wstr, wruns), 1ul << n);
     printf("Word %s, maxocc %lu\n", wstr, minrec.occ);
     print_record(&minrec);
     return;
@@ -88,7 +89,8 @@ void compute_maxfreq_subword(char* wstr){
 // computation
 void insert_heuristic(char* wstr){
     int n = strlen(wstr);
-    Word oldw = build_word_str(wstr, false);
+    Runtab wruns;
+    Word oldw = build_word_str(wstr, wruns);
     u64 wbits = oldw.bits;
     u64 recw = wbits;
     u64 recocc = maxfreq_subword_fast(oldw) << 1;
@@ -101,7 +103,7 @@ void insert_heuristic(char* wstr){
             newbits += bit;
             newbits <<= i;
             newbits += wbits & ((1ul << i) - 1);
-            Word w = build_word(newbits, n + 1, false);
+            Word w = build_word(newbits, n + 1, wruns);
             u64 swocc = maxfreq_subword_fast(w);
             if(swocc < recocc){
                 recocc = swocc;
@@ -109,7 +111,7 @@ void insert_heuristic(char* wstr){
             }
         }
     }
-    oldw = build_word(recw, n + 1, false);
+    oldw = build_word(recw, n + 1, wruns);
     print_word_bin(oldw);
     printf("Maxocc (fast): %lu\n", recocc);
     return;

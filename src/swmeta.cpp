@@ -68,12 +68,13 @@ static inline Rec_sw local_search(Word w, int k, u64 record){
     int n = w.len;
     int tab[MAXLEN];
     bool flag = true;
+    Runtab swruns;
     while(flag) {
         u64 comb = init_comb(n - 1, k);
         u64 recbits = w.bits;
         flag = false;
         do {
-            Word curw = build_word(w.bits ^ comb, n, false);
+            Word curw = build_word(w.bits ^ comb, n, swruns);
             Rec_sw maxrec = maxfreq_subword_hinted_fast(curw, record);
             if(maxrec.occ < minrec.occ){
                 minrec = maxrec;
@@ -83,7 +84,7 @@ static inline Rec_sw local_search(Word w, int k, u64 record){
             }
         } while(next_comb(n - 1, k, &comb));
     }
-    minrec.word = build_word(minrec.word.bits, n, false);
+    minrec.word = build_word(minrec.word.bits, n, swruns);
     return minrec;
 }
 
@@ -103,11 +104,12 @@ static inline Rec_sw local_search_full(Word w, int k, u64 record){
 // generate a random word with given length
 static inline Word random_word(int n){
     u64 bits = 0;
+    Runtab swruns;
     for(int i = 0; i < n - 1; i++){
         bits <<= 1;
         bits += (rand() >> 5) & 1;
     }
-    return build_word(bits, n, false);
+    return build_word(bits, n, swruns);
 }
 
 // metaheuristic, mixing iteratively
@@ -120,6 +122,7 @@ void mixed_descent(int n, int maxk, u64 maxiter){
     Word w = random_word(n);
     Rec_sw currec = local_search_full(w, maxk, maxfreq_subword_fast(w));
     Rec_sw bestrec = currec;
+    Runtab swruns;
     mytime = time(NULL);
     printf("%s", ctime(&mytime));
     print_record(&bestrec);
@@ -145,7 +148,7 @@ void mixed_descent(int n, int maxk, u64 maxiter){
         for(int i = 0; i < n - 1; i++){
             if(rand() / (float) RAND_MAX * (n - 1) < flipcnt) bits ^= 1ULL << i;
         }
-        currec = local_search_full(build_word(bits, n, false), 
+        currec = local_search_full(build_word(bits, n, swruns), 
                                    maxk, bestrec.occ);
         if(currec.occ < bestrec.occ){
             bestrec = currec;
