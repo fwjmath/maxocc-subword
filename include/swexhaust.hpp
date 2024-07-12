@@ -33,11 +33,11 @@ typedef std::map<u64, u64> Histogram;
 // And we may have several words with the same numbers
 Rec_occ min_maxfreq_subword_hinted(int n, u64 record);
 
-// same as before, just that we try to prune partial words
-Rec_occ min_maxfreq_subword_pruned(int n, u64 record);
-
 // compute the maxfreq for subwords in a given word. Used in metaheuristics.
-Rec_sw maxfreq_subword_hinted(Word w, u64 record);
+Rec_sw maxfreq_subword_hinted_fast(Word w, u64 record);
+
+// compute most frequent subwords for a single given word. Used in computing for a single word.
+Rec_sw maxfreq_subword_single(Word w, u64 record);
 
 // returns histogram of max subword occurrences
 Histogram maxfreq_subword_histo(int n);

@@ -131,12 +131,11 @@ static void maxfreq_subword_len_hinted(Rec_sw* maxrec, int k, u64 record){
     return;
 }
 
-Rec_sw maxfreq_subword_hinted(Word w, u64 record){
-    static Word lastsw = {0, NULL, 1, 2};
+static Rec_sw maxfreq_subword_hinted(Word w, u64 record, Word* lastsw){
     Rec_sw maxrec = {w, std::vector<Word>(), 1};
     Rec_sw maxrec_len = {w, std::vector<Word>(), 1};
-    int lastsw_len = lastsw.len;
-    u64 lastsw_bits = lastsw.bits;
+    int lastsw_len = lastsw->len;
+    u64 lastsw_bits = lastsw->bits;
     Runtab swruntab;
     // filter with heuristics
     // if one of the following constructed subword give something bigger than
@@ -195,7 +194,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
                 maxrec.subwords.push_back(newsw);
                 maxrec.occ = filter_occ;
                 // we update here because it may change a lot
-                lastsw = maxrec.subwords[0];
+                *lastsw = maxrec.subwords[0];
                 return maxrec;
             }
             if(!contd) break;
@@ -213,7 +212,7 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
                                    maxrec_len.subwords.begin(),
                                    maxrec_len.subwords.end());
             if(maxrec.occ > record){
-                lastsw = maxrec.subwords[0];
+                *lastsw = maxrec.subwords[0];
                 break;
             }
         }
@@ -227,6 +226,12 @@ Rec_sw maxfreq_subword_hinted(Word w, u64 record){
         if(curk == w.len - 1) break;
     }
     return maxrec;
+}
+
+// compute most frequent subwords for a single given word
+Rec_sw maxfreq_subword_single(Word w, u64 record){
+    Word lastsw = {0, NULL, 1, 2};
+    return maxfreq_subword_hinted(w, record, &lastsw);
 }
 
 // for metaheuristics
@@ -271,46 +276,15 @@ Rec_occ min_maxfreq_subword_hinted(int n, u64 record){
     // construct the word
     Runtab wruns;
     Word w = build_word(0, n, wruns);
+    Word lastsw = {0, NULL, 1, 2};
     // initialize the records
     Rec_occ minrec;
     minrec.occ = record;
     minrec.recs = std::vector<Rec_sw>();
     do {
         if(!is_primitive(w.bits, n)) continue; // only test primitive ones
-        update_minrec(&minrec, maxfreq_subword_hinted(w, record));
+        update_minrec(&minrec, maxfreq_subword_hinted(w, record, &lastsw));
         record = minrec.occ;
     } while(increment_word(&w));
-    return minrec;
-}
-
-// extend the candidate word in pruned exhaustive search
-static void min_maxfreq_prune(int n, Word* pw, Rec_occ* minrec){
-    if(pw->len == n && is_primitive(pw->bits, n)){ // we have a full word
-        update_minrec(minrec, maxfreq_subword_hinted(*pw, minrec->occ));
-        return; 
-    }
-    // we don't have a full word, try to extend
-    // add bits
-    for(int bit = 0; bit < 2; bit++){
-        add_bit(pw, bit);
-        // printf("Add bit %d\n", bit);
-        if(maxfreq_subword_hinted(*pw, minrec->occ).occ <= minrec->occ){
-            min_maxfreq_prune(n, pw, minrec);
-        }
-        remove_bit(pw);
-    }
-    return;
-}
-
-// exhaustive search by constructing partial words and pruning those with more
-// than the hinted number of subword occurrences.
-Rec_occ min_maxfreq_subword_pruned(int n, u64 record){
-    int localruns[MAXLEN];
-    int len = n >> 1;
-    Rec_occ minrec = {std::vector<Rec_sw>(), record};
-    Word pw = build_word(0, len + 1, localruns);
-    do {
-        min_maxfreq_prune(n, &pw, &minrec);
-    } while(increment_word(&pw));
     return minrec;
 }

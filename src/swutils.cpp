@@ -54,16 +54,6 @@ void hinted_search(int n, u64 hint){
     return;
 }
 
-// exhaustive search for minimal subword entropy, using a hint, branch and bound
-void pruned_search(int n, u64 hint){
-    Rec_occ minrec = min_maxfreq_subword_pruned(n, hint);
-    printf("%d bits, hint %lu, found %lu\n", n, hint, minrec.occ);
-    for(auto rec : minrec.recs){
-        print_record(&rec);
-    }
-    return;
-}
-
 // build a histogram for subword occurrences
 void histo_subword(int n){
     Histogram histo = maxfreq_subword_histo(n);
@@ -79,7 +69,7 @@ void histo_subword(int n){
 void compute_maxfreq_subword(char* wstr){
     int n = strlen(wstr);
     Runtab wruns;
-    Rec_sw minrec = maxfreq_subword_hinted(build_word_str(wstr, wruns), 1ul << n);
+    Rec_sw minrec = maxfreq_subword_single(build_word_str(wstr, wruns), 1ul << n);
     printf("Word %s, maxocc %lu\n", wstr, minrec.occ);
     print_record(&minrec);
     return;

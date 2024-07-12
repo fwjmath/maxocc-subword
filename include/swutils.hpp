@@ -34,9 +34,6 @@ Word build_word_str(const char* str, bool is_subword, Runtab wruns);
 // using subword with large number of occurrences from the last word as a hint
 void hinted_search(int n, u64 hint);
 
-// exhaustive search for minimal subword entropy, using a hint, branch and bound
-void pruned_search(int n, u64 hint);
-
 // build a histogram for subword occurrences
 void histo_subword(int n);
 
