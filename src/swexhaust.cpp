@@ -183,7 +183,7 @@ static Rec_sw maxfreq_subword_hinted(Word w, u64 record, Word* lastsw){
     }
     // again another filter: words with run length only 1 and 2
     // needs more test to see if it leads to speedup for larger n
-    // good for n=37, promoted
+    // speeds up for n=37, about 15%, so promoted to regular usage
     Fibo_state fbst;
     if(lastsw_len >= 3 && fibogen_init(lastsw_len, &fbst)){
         u64 bits = 0;
@@ -288,4 +288,30 @@ Rec_occ min_maxfreq_subword_hinted(int n, u64 record){
         record = minrec.occ;
     } while(increment_word(&w));
     return minrec;
+}
+
+// exhaustive search with a hint, parallel version
+void* min_maxfreq_subword_hinted_parallel(void* info){
+    // get information
+    Thread_info tinfo = *((Thread_info*) info);
+    int n = tinfo.n;
+    int tid = tinfo.thread_id;
+    u64 record = tinfo.record;
+    // construct the word
+    Runtab wruns;
+    Word w = build_word(0, n, wruns);
+    int segstart = n >> 1;
+    // initialize the records
+    tinfo.minrec->occ = record;
+    tinfo.minrec->recs = std::vector<Rec_sw>();
+    Word lastsw = {0, NULL, 1, 2};
+    bool has_next = true; // there are still words to check
+    do {
+        if(((w.bits >> segstart) & (THREAD_COUNT - 1)) == tid
+            && is_primitive(w.bits, n)){ // only test primitive ones
+            update_minrec(tinfo.minrec, maxfreq_subword_hinted(w, record, &lastsw));
+            record = tinfo.minrec->occ;
+        }
+    } while(increment_word(&w));
+    return NULL;
 }

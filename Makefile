@@ -1,7 +1,7 @@
 CC=g++
 INCDIR=include
 CXXFLAGS=-march=native -Ofast -std=c++20 -I$(INCDIR)
-LDFLAGS=
+LDFLAGS=-lpthread
 VPATH=src:include
 
 all: swmain

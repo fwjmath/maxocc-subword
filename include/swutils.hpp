@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 #include "swcnt.hpp"
 #include "swexhaust.hpp"
 
@@ -33,6 +34,9 @@ Word build_word_str(const char* str, bool is_subword, Runtab wruns);
 // exhaustive search for minimal subword entropy, using a hint
 // using subword with large number of occurrences from the last word as a hint
 void hinted_search(int n, u64 hint);
+
+// the parallel version of the function above
+void hinted_search_parallel(int n, u64 hint);
 
 // build a histogram for subword occurrences
 void histo_subword(int n);

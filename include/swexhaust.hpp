@@ -26,12 +26,29 @@
 #include "fibogen.hpp"
 #include <map>
 
+// number of threads used in parallel mode, should always be a power of 2
+#ifndef THREAD_COUNT
+#define THREAD_COUNT 4
+#endif
+
 typedef std::map<u64, u64> Histogram;
+
+// thread information for parallelism
+typedef struct {
+    int n;
+    int thread_id;
+    u64 record;
+    Rec_occ* minrec;
+} Thread_info;
 
 // Returns the words with the minimal value of most frequence occurrences
 // Each word may have several subwords reaching the same number of occurrences
 // And we may have several words with the same numbers
 Rec_occ min_maxfreq_subword_hinted(int n, u64 record);
+
+// The same as the function above, but only for some of the words
+// Used for the parallel version
+void* min_maxfreq_subword_hinted_parallel(void* info);
 
 // compute the maxfreq for subwords in a given word. Used in metaheuristics.
 Rec_sw maxfreq_subword_hinted_fast(Word w, u64 record);

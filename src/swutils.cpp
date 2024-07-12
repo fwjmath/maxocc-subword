@@ -54,6 +54,46 @@ void hinted_search(int n, u64 hint){
     return;
 }
 
+// exhaustive search for minimal subword entropy, using a hint, parallel version
+void hinted_search_parallel(int n, u64 hint){
+    Rec_occ minrecs[THREAD_COUNT];
+    Thread_info thread_info[THREAD_COUNT];
+    pthread_t thrds[THREAD_COUNT];
+    if(thrds == NULL){
+        printf("Parallelization failed at initialization\n");
+        return;
+    }
+    // set parallel mode, freeze the cache
+    set_parallel_mode();
+    // create threads
+    for(int thread_id = 0; thread_id < THREAD_COUNT; thread_id++){
+        thread_info[thread_id].n = n;
+        thread_info[thread_id].thread_id = thread_id;
+        thread_info[thread_id].record = hint;
+        thread_info[thread_id].minrec = minrecs + thread_id;
+        pthread_create(thrds + thread_id, NULL, min_maxfreq_subword_hinted_parallel, thread_info + thread_id);
+    }
+    // collect all threads
+    for(int thread_id = 0; thread_id < THREAD_COUNT; thread_id++){
+        pthread_join(thrds[thread_id], NULL);
+    }
+    // get the best record
+    u64 minocc = minrecs[0].occ;
+    for(int i = 0; i < THREAD_COUNT; i++){
+        if(minocc > minrecs[i].occ){
+            minocc = minrecs[i].occ;
+        }
+    }
+    printf("%d bits, hint %lu, found %lu\n", n, hint, minocc);
+    for(int i = 0; i < THREAD_COUNT; i++){
+        if(minrecs[i].occ != minocc) continue;
+        for(auto rec : minrecs[i].recs){
+            print_record(&rec);
+        }
+    }
+    return;
+}
+
 // build a histogram for subword occurrences
 void histo_subword(int n){
     Histogram histo = maxfreq_subword_histo(n);
