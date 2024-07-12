@@ -184,10 +184,11 @@ static Rec_sw maxfreq_subword_hinted(Word w, u64 record, Word* lastsw){
     // again another filter: words with run length only 1 and 2
     // needs more test to see if it leads to speedup for larger n
     // good for n=37, promoted
-    if(lastsw_len >= 3 && fibogen_init(lastsw_len)){
+    Fibo_state fbst;
+    if(lastsw_len >= 3 && fibogen_init(lastsw_len, &fbst)){
         u64 bits = 0;
         while(true){
-            bool contd = fibogen_next(&bits);
+            bool contd = fibogen_next(&bits, &fbst);
             Word newsw = build_word(bits, lastsw_len, swruntab);
             u64 filter_occ = subword_cnt(w, newsw);
             if(filter_occ > record){

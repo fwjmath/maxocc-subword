@@ -26,12 +26,17 @@
 
 typedef uint64_t u64;
 
+typedef struct {
+    u64 curbits;     // current bits
+    int bitcnt;   // total number of bits
+} Fibo_state;
+
 // intialize the generator of words containing only runs of length 1 or 2
 // they are counted by the Fibonacci numbers, thus the name of this module
 // returns whether it has been properly initialized
-bool fibogen_init(int n);
+bool fibogen_init(int n, Fibo_state* state);
 
 // returns the next word in a pointer, and returns whether there is a next word
-bool fibogen_next(u64* bits);
+bool fibogen_next(u64* bits, Fibo_state* state);
 
 #endif
