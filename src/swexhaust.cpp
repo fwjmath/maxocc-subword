@@ -317,6 +317,6 @@ void* min_maxfreq_subword_hinted_parallel(void* info){
     } while(increment_word(&w));
     // measure the time
     time_t mytime = time(NULL);
-    printf("%s", ctime(&mytime));
+    printf("Thread %d finished at %s", tid, ctime(&mytime));
     return NULL;
 }
