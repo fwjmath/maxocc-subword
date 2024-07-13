@@ -83,14 +83,7 @@ int main(int argc, char** argv){
             computed = true; 
         }else if(strcmp(argv[2], "mt") == 0){
             hint = (argc < 4) ? (1ULL << n) : atoi(argv[3]);
-            // first, fill the cache in with histo
-            int cachebit = 2 + (n >> 1);
-            if(cachebit > 20) cachebit = 20; // takes 10GB memory
-            maxfreq_subword_histo(cachebit); // throw away the result!
-            printf("Finished precomputing\n");
-            mytime = time(NULL);
-            printf("%s", ctime(&mytime));
-            // now, call the parallel function
+            // call the parallel function
             hinted_search_parallel(n, hint);
             computed = true;
         }else{

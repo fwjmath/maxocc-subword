@@ -25,7 +25,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <tuple>
-#include <unordered_map>
+//#include <unordered_map>
+#include <tbb/concurrent_unordered_map.h>
 #include <vector>
 #include <bit>
 #include <utility>
@@ -47,7 +48,9 @@ struct pairhash {
     }
 };
 
-typedef std::unordered_map<u64pair, u64, pairhash> Cache; // Cache for subword counting
+// typedef std::unordered_map<u64pair, u64, pairhash> Cache; // Cache for subword counting
+
+typedef tbb::concurrent_unordered_map<u64pair, u64, pairhash> Cache; // Cache for subword counting
 
 typedef struct{
     u64 bits;
@@ -104,8 +107,5 @@ void remove_bit(Word* word);
 
 // returns the number of subword occurrences
 u64 subword_cnt(Word word, Word subword);
-
-// set to be used in a parallel way, i.e., forbidding insertions in cache
-void set_parallel_mode();
 
 #endif

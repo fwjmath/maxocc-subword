@@ -1,7 +1,7 @@
 CC=g++
 INCDIR=include
 CXXFLAGS=-march=native -Ofast -std=c++20 -I$(INCDIR)
-LDFLAGS=-lpthread
+LDLIBS=-lpthread -ltbb
 VPATH=src:include
 
 all: swmain
@@ -19,3 +19,8 @@ swutils.o: swutils.cpp swutils.hpp swexhaust.hpp swcnt.hpp
 swmeta.o: swmeta.cpp swmeta.hpp swcnt.hpp
 
 fibogen.o: fibogen.cpp fibogen.hpp
+
+.PHONY: clean
+
+clean:
+	rm *.o swmain

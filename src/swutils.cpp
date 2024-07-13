@@ -63,8 +63,6 @@ void hinted_search_parallel(int n, u64 hint){
         printf("Parallelization failed at initialization\n");
         return;
     }
-    // set parallel mode, freeze the cache
-    set_parallel_mode();
     // create threads
     for(int thread_id = 0; thread_id < THREAD_COUNT; thread_id++){
         thread_info[thread_id].n = n;
