@@ -307,7 +307,8 @@ void* min_maxfreq_subword_hinted_parallel(void* info){
     Word lastsw = {0, NULL, 1, 2};
     bool has_next = true; // there are still words to check
     do {
-        if(((w.bits >> segstart) & (THREAD_COUNT - 1)) == tid
+        // we want a well-mixed separation so that all threads ends more or less at the same time
+        if((((w.bits >> segstart) ^ w.bits) & (THREAD_COUNT - 1)) == tid
             && is_primitive(w.bits, n)){ // only test primitive ones
             update_minrec(tinfo.minrec, maxfreq_subword_hinted(w, record, &lastsw));
             record = tinfo.minrec->occ;
