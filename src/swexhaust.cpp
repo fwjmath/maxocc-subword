@@ -20,6 +20,7 @@
 ******************************************************************************/
 
 #include "swexhaust.hpp"
+#include <time.h>
 
 // compute max frequence subword with given length, for histogram, no speed up
 static inline u64 maxfreq_subword_len(Word w, int k){
@@ -314,5 +315,8 @@ void* min_maxfreq_subword_hinted_parallel(void* info){
             record = tinfo.minrec->occ;
         }
     } while(increment_word(&w));
+    // measure the time
+    time_t mytime = time(NULL);
+    printf("%s", ctime(&mytime));
     return NULL;
 }
