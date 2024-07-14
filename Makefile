@@ -1,6 +1,7 @@
 CC=g++
 INCDIR=include
-CXXFLAGS=-march=native -Ofast -std=c++20 -I$(INCDIR)
+THREADCNT=4
+CXXFLAGS=-march=native -Ofast -std=c++20 -I$(INCDIR) -DTHREAD_COUNT=$(THREADCNT)
 LDLIBS=-lpthread -ltbb
 VPATH=src:include
 
