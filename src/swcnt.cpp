@@ -255,7 +255,7 @@ static inline Word cut_word_back(Word w, int run){
 }
 
 // assuming w and sw starts with the same letter, and end also the same
-static u64 subword_cnt_raw(Word w, Word sw){
+static u64 subword_cnt_raw(Word w, Word sw, bool issub){
     if(sw.runcnt == 0) return 1; // empty subword
     if(w.runcnt < sw.runcnt) return 0; // not enough run
     u64 accu = 0;
@@ -275,8 +275,8 @@ static u64 subword_cnt_raw(Word w, Word sw){
         */
         return 0; // not possible
     }
-    // lookup
-    if(w.runcnt < MAX_CACHE_RUN){
+    // lookup, not needed if it is a full-length word-subword pair
+    if(w.runcnt < MAX_CACHE_RUN && issub){
         auto search = swcnt[w.len][sw.len].find(u64pair(w.bits, sw.bits));
         if(search != swcnt[w.len][sw.len].end()) return search->second;
     }
@@ -287,8 +287,8 @@ static u64 subword_cnt_raw(Word w, Word sw){
     Word swback = cut_word_back(sw, mididx + 1);
     if(lidx == ridx){
         accu = binom[w.run[lidx]][midseg]; // middle span
-        accu *= subword_cnt_raw(cut_word_front(w, lidx), swfront);
-        accu *= subword_cnt_raw(cut_word_back(w, lidx + 1), swback);
+        accu *= subword_cnt_raw(cut_word_front(w, lidx), swfront, true);
+        accu *= subword_cnt_raw(cut_word_back(w, lidx + 1), swback, true);
     } else {
         for(int k = lidx; k < ridx + 2; k += 2){
             int wsegtotal = 0;
@@ -307,15 +307,15 @@ static u64 subword_cnt_raw(Word w, Word sw){
                 mult -= binom[wsegin + w.run[l]][midseg];
                 if(wsegin >= 0) mult += binom[wsegin][midseg];
                 if(mult > 0){
-                    mult *= subword_cnt_raw(cut_word_front(w, k), swfront);
-                    mult *= subword_cnt_raw(cut_word_back(w, l + 1), swback);
+                    mult *= subword_cnt_raw(cut_word_front(w, k), swfront, true);
+                    mult *= subword_cnt_raw(cut_word_back(w, l + 1), swback, true);
                     accu += mult;
                 }
             }
         }
     }
-    // restriction on length to limit memory usage and control for modification for parallelism
-    if(w.runcnt < MAX_CACHE_RUN){
+    // do not record for word-subword pair that is computed only once
+    if(w.runcnt < MAX_CACHE_RUN && issub){
         swcnt[w.len][sw.len].insert({u64pair(w.bits, sw.bits), accu});
     }
     // debug info
@@ -343,5 +343,5 @@ u64 subword_cnt(Word word, Word subword){
         word.bits >>= word.run[word.runcnt - 1];
         word.runcnt--;
     }
-    return subword_cnt_raw(word, subword);
+    return subword_cnt_raw(word, subword, false);
 }
