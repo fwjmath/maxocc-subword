@@ -97,7 +97,7 @@ void histo_subword(int n){
     Histogram histo = maxfreq_subword_histo(n);
     printf("Maximal subword occurrences histogram for %d bits\n{\n", n);
     for(const auto& [freq, cnt] : histo){
-        printf("%lu: %lu\n", freq, cnt);
+        printf("%lu: %lu,\n", freq, cnt);
     }
     printf("}\n");
     return;

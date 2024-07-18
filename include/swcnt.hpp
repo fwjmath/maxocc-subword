@@ -32,7 +32,7 @@
 #include <utility>
 
 #define MAXLEN 64
-#define MAX_CACHE_RUN 9
+#define MAX_CACHE_RUN 8
 
 typedef uint64_t u64;
 
